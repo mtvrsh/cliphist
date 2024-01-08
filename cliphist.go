@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	_ "embed"
 	_ "image/gif"
@@ -34,7 +35,7 @@ var version string
 func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "usage:\n")
-		fmt.Fprintf(flag.CommandLine.Output(), "  $ %s <store|list|decode|delete|delete-query|wipe|version>\n", flag.CommandLine.Name())
+		fmt.Fprintf(flag.CommandLine.Output(), "  $ %s <store|list|decode|delete|delete-query|get-all|wipe|version>\n", flag.CommandLine.Name())
 		fmt.Fprintf(flag.CommandLine.Output(), "options:\n")
 		flag.VisitAll(func(f *flag.Flag) {
 			fmt.Fprintf(flag.CommandLine.Output(), "  -%s (default %s)\n", f.Name, f.DefValue)
@@ -76,6 +77,8 @@ func main() {
 		err = list(*dbPath, os.Stdout, *previewWidth)
 	case "decode":
 		err = decode(*dbPath, os.Stdin, os.Stdout, flag.Arg(1))
+	case "get-all":
+		err = getAll(*dbPath, os.Stdout)
 	case "delete-query":
 		err = deleteQuery(*dbPath, flag.Arg(1))
 	case "delete":
@@ -359,6 +362,30 @@ func wipe(dbPath string) error {
 
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit tx: %w", err)
+	}
+	return nil
+}
+
+// prints all valid utf8 entries from db
+func getAll(dbPath string, out io.Writer) error {
+	db, err := initDBReadOnly(dbPath)
+	if err != nil {
+		return fmt.Errorf("opening db: %w", err)
+	}
+	defer db.Close()
+
+	tx, err := db.Begin(false)
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback() //nolint:errcheck
+
+	b := tx.Bucket([]byte(bucketKey))
+	c := b.Cursor()
+	for k, v := c.Last(); k != nil; k, v = c.Prev() {
+		if utf8.Valid(v) {
+			fmt.Fprintf(out, "%s\n", bytes.TrimSuffix(v, []byte("\n")))
+		}
 	}
 	return nil
 }
