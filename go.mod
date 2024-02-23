@@ -1,4 +1,4 @@
-module go.senan.xyz/cliphist
+module github.com/mtvrsh/cliphist
 
 go 1.20
 
