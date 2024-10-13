@@ -49,8 +49,8 @@ func main() {
 	configPath := flag.String("config-path", "$XDG_CONFIG_HOME/cliphist/config", "overwrite config path to use instead of cli flags")
 
 	flag.Parse()
-	flagconf.ParseEnv()
 	flagconf.ParseConfig(*configPath)
+	flagconf.ParseEnv()
 
 	*dbPath = os.ExpandEnv(*dbPath)
 
