@@ -61,8 +61,8 @@ func main() {
 	configPath := flag.String("config-path", filepath.Join(configHome, "cliphist", "config"), "overwrite config path to use instead of cli flags")
 
 	flag.Parse()
-	flagconf.ParseEnv()
 	flagconf.ParseConfig(*configPath)
+	flagconf.ParseEnv()
 
 	switch flag.Arg(0) {
 	case "store":
