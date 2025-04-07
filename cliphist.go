@@ -440,9 +440,8 @@ func preview(index uint64, data []byte, width uint) string {
 }
 
 func trunc(in string, max int, ellip string) string {
-	runes := []rune(in)
-	if len(runes) > max {
-		return string(runes[:max]) + ellip
+	if len(in) > max {
+		return fmt.Sprintf("%.*s%s", max, in, ellip)
 	}
 	return in
 }
